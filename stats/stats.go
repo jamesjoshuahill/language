@@ -1,6 +1,9 @@
 package stats
 
-import "strings"
+import (
+	"strings"
+	"sync"
+)
 
 type Summary struct {
 	Count       int      `json:"count"`
@@ -9,6 +12,7 @@ type Summary struct {
 }
 
 type stats struct {
+	mutex           *sync.RWMutex
 	wordsSeen       int
 	wordFrequency   map[string]int
 	letterFrequency map[rune]int
@@ -18,6 +22,7 @@ type stats struct {
 
 func NewStats() *stats {
 	return &stats{
+		mutex:           new(sync.RWMutex),
 		wordFrequency:   make(map[string]int),
 		letterFrequency: make(map[rune]int),
 		top5Words:       NewTop5(),
@@ -26,6 +31,9 @@ func NewStats() *stats {
 }
 
 func (s *stats) Record(language string) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
 	words := strings.Fields(language)
 	for _, word := range words {
 		s.recordWord(word)
@@ -34,8 +42,12 @@ func (s *stats) Record(language string) {
 }
 
 func (s *stats) Summary() Summary {
+	s.mutex.RLock()
+	count := s.wordsSeen
+	s.mutex.RUnlock()
+
 	return Summary{
-		Count:       s.wordsSeen,
+		Count:       count,
 		Top5Words:   s.top5Words.List(),
 		Top5Letters: s.top5Letters.List(),
 	}

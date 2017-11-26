@@ -24,14 +24,27 @@ var _ = Describe("Server", func() {
 		gexec.KillAndWait()
 	})
 
-	It("listens on port 5555 by default", func() {
-		session := startServer(listenerPort)
+	It("listens on ports 5555 and 8080 by default", func() {
+		session := startServer(listenerPort, webPort)
 
-		Expect(session.Out).To(gbytes.Say("Listening on port 5555..."))
+		Expect(session.Out.Contents()).To(ContainSubstring("Listening on port 5555..."))
+		Expect(session.Out.Contents()).To(ContainSubstring("Serving HTTP on port 8080..."))
 		Consistently(session).ShouldNot(gexec.Exit())
 	})
 
-	It("can listen on a custom port", func() {
+	It("listens for natural language", func() {
+		session := startServer(listenerPort)
+		conn, err := net.Dial("tcp", fmt.Sprintf(":%d", listenerPort))
+		Expect(err).NotTo(HaveOccurred())
+
+		_, err = conn.Write([]byte("here are some more words"))
+
+		Expect(err).NotTo(HaveOccurred())
+		conn.Close()
+		Eventually(session.Out).Should(gbytes.Say("received 'here are some more words'"))
+	})
+
+	It("can listen for natural language on a custom port", func() {
 		cmd := exec.Command(serverBinaryPath, "-port", "1234")
 
 		session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
@@ -39,18 +52,6 @@ var _ = Describe("Server", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(listeningOn(1234)).Should(BeTrue())
 		Expect(session.Out).To(gbytes.Say("Listening on port 1234..."))
-	})
-
-	It("accepts arbitrary natural language", func() {
-		session := startServer(listenerPort)
-		conn, err := net.Dial("tcp", fmt.Sprintf(":%d", listenerPort))
-		Expect(err).NotTo(HaveOccurred())
-
-		_, err = conn.Write([]byte("here are some more words"))
-		conn.Close()
-
-		Expect(err).NotTo(HaveOccurred())
-		Eventually(session.Out).Should(gbytes.Say("received 'here are some more words'"))
 	})
 
 	It("responds to GET /stats", func() {

@@ -46,4 +46,13 @@ var _ = Describe("Stats", func() {
 		Expect(stats.Summary().Top5Words).
 			To(ConsistOf("six", "five", "four", "three", "two"))
 	})
+
+	It("knows the top five letters", func() {
+		stats := stats.NewStats()
+
+		stats.Record("a bb ccc dddd eeeee ffffff")
+
+		Expect(stats.Summary().Top5Letters).
+			To(ConsistOf("b", "c", "d", "e", "f"))
+	})
 })

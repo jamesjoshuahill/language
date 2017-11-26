@@ -13,18 +13,24 @@ import (
 )
 
 var _ = Describe("Server", func() {
-	var session *gexec.Session
-
-	BeforeEach(func() {
-		session = startServer(5555)
-	})
-
 	AfterEach(func() {
 		gexec.KillAndWait()
 	})
 
-	It("listens on port 5555", func() {
+	It("listens on port 5555 by default", func() {
+		session := startServer(5555)
 		Expect(session.Out).To(gbytes.Say("Starting server on port 5555..."))
+		Consistently(session).ShouldNot(gexec.Exit())
+	})
+
+	It("listens on a custom port", func() {
+		cmd := exec.Command(serverBinaryPath, "-port", "1234")
+		session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+		Expect(err).NotTo(HaveOccurred())
+
+		Eventually(listeningOn(1234)).Should(BeTrue())
+
+		Expect(session.Out).To(gbytes.Say("Starting server on port 1234..."))
 		Consistently(session).ShouldNot(gexec.Exit())
 	})
 })

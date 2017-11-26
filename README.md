@@ -11,8 +11,8 @@ $ go get github.com/jamesjoshuahill/language
 ## Run
 
 ```bash
-$ language     // Starts server
-$ language -h  // Outputs usage for configuring ports
+$ language     # Starts server
+$ language -h  # Outputs usage for configuring ports
 ```
 
 ## Test

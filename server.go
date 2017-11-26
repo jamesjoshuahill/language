@@ -1,13 +1,21 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
+	"net/http"
 	"os"
 )
+
+type Stats struct {
+	Count       int      `json:"count"`
+	Top5Words   []string `json:"top5words"`
+	Top5Letters []string `json:"top5letters"`
+}
 
 func main() {
 	var port int
@@ -15,8 +23,16 @@ func main() {
 	flag.Parse()
 
 	log.SetOutput(os.Stdout)
-	log.Printf("Listening on port %d...", port)
 
+	go languageListener(port)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/stats", statsHandler)
+	log.Fatal(http.ListenAndServe(":8080", mux))
+}
+
+func languageListener(port int) {
+	log.Printf("Listening on port %d...", port)
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Fatal(err)
@@ -28,15 +44,24 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		go handleConn(conn)
+		go connHandler(conn)
 	}
 }
 
-func handleConn(conn net.Conn) {
+func connHandler(conn net.Conn) {
 	defer conn.Close()
 	data, err := ioutil.ReadAll(conn)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	log.Printf("received '%s'\n", string(data))
+}
+
+func statsHandler(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(Stats{
+		Count:       5,
+		Top5Words:   []string{"here", "are", "some", "more", "words"},
+		Top5Letters: []string{"e", "r", "o", "s", "h"},
+	})
 }

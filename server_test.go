@@ -2,7 +2,9 @@ package main_test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net"
+	"net/http"
 	"os/exec"
 
 	. "github.com/onsi/ginkgo"
@@ -41,11 +43,27 @@ var _ = Describe("Server", func() {
 		conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))
 		Expect(err).NotTo(HaveOccurred())
 
-		_, err = conn.Write([]byte("here are some words"))
+		_, err = conn.Write([]byte("here are some more words"))
 		conn.Close()
 
 		Expect(err).NotTo(HaveOccurred())
-		Eventually(session.Out).Should(gbytes.Say("received 'here are some words'"))
+		Eventually(session.Out).Should(gbytes.Say("received 'here are some more words'"))
+	})
+
+	It("responds to GET /stats", func() {
+		startServer(port)
+
+		response, err := http.DefaultClient.Get("http://localhost:8080/stats")
+
+		Expect(err).NotTo(HaveOccurred())
+		defer response.Body.Close()
+		stats, err := ioutil.ReadAll(response.Body)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(stats).To(MatchJSON(`{
+			"count": 5,
+			"top5words": ["here", "are", "some", "more", "words"],
+			"top5letters": ["e", "r", "o", "s", "h"]
+		}`))
 	})
 })
 

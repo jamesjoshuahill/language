@@ -18,8 +18,9 @@ type Stats struct {
 }
 
 func main() {
-	var port int
-	flag.IntVar(&port, "port", 5555, "port to listen on")
+	var port, webPort int
+	flag.IntVar(&port, "port", 5555, "port to listen for natural language")
+	flag.IntVar(&webPort, "webPort", 8080, "port to serve HTTP endpoints")
 	flag.Parse()
 
 	log.SetOutput(os.Stdout)
@@ -28,7 +29,8 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/stats", statsHandler)
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	log.Printf("Serving HTTP on port %d...", webPort)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", webPort), mux))
 }
 
 func languageListener(port int) {

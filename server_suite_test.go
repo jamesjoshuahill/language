@@ -22,5 +22,5 @@ func TestLanguage(t *testing.T) {
 	})
 
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Language Suite")
+	RunSpecs(t, "Server Suite")
 }

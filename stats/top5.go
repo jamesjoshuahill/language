@@ -21,7 +21,7 @@ func (t *Top5) Submit(entry string, score int) *Top5 {
 }
 
 func (t *Top5) List() []string {
-	var top5 []string
+	top5 := []string{}
 	for entry := range t.entries {
 		top5 = append(top5, entry)
 	}

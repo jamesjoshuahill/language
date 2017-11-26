@@ -7,6 +7,14 @@ import (
 )
 
 var _ = Describe("Stats", func() {
+	It("starts with an empty summary", func() {
+		stats := stats.NewStats()
+
+		Expect(stats.Summary().Count).To(BeZero())
+		Expect(stats.Summary().Top5Words).To(BeEmpty())
+		Expect(stats.Summary().Top5Letters).To(BeEmpty())
+	})
+
 	It("can count words", func() {
 		stats := stats.NewStats()
 

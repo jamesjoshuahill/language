@@ -9,13 +9,9 @@ import (
 	"net"
 	"net/http"
 	"os"
-)
 
-type Stats struct {
-	Count       int      `json:"count"`
-	Top5Words   []string `json:"top5words"`
-	Top5Letters []string `json:"top5letters"`
-}
+	"github.com/jamesjoshuahill/language/stats"
+)
 
 func main() {
 	var port, webPort int
@@ -61,7 +57,7 @@ func connHandler(conn net.Conn) {
 }
 
 func statsHandler(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(Stats{
+	json.NewEncoder(w).Encode(stats.Summary{
 		Count:       5,
 		Top5Words:   []string{"here", "are", "some", "more", "words"},
 		Top5Letters: []string{"e", "r", "o", "s", "h"},

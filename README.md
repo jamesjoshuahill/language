@@ -11,8 +11,15 @@ $ go get github.com/jamesjoshuahill/language
 ## Run
 
 ```bash
-$ language     # Starts server
-$ language -h  # Outputs usage for configuring ports
+$ language                                             # Start server
+$ echo "here are some more words" | nc localhost 5555  # Send some language
+$ curl http://localhost:8080/stats                     # Request language stats
+{"count":5,"top5words":["some","more","words","here","are"],"top5letters":["s","o","e","r","m"]}
+```
+
+The server can be configured with flags:
+```
+$ language -h  # Outputs usage
 ```
 
 ## Test

@@ -18,7 +18,7 @@ $ curl http://localhost:8080/stats                     # Request language stats
 ```
 
 The server can be configured with flags:
-```
+```bash
 $ language -h  # Outputs usage
 ```
 
@@ -29,6 +29,7 @@ The test suite uses [Ginkgo](https://onsi.github.io/ginkgo/) and [Gomega](https:
 ```bash
 $ cd $GOPATH/src/github.com/jamesjoshuahill/language
 $ go get github.com/onsi/ginkgo/ginkgo
+$ go get github.com/onsi/gomega
 $ ginkgo -r -randomizeSuites -randomizeAllSpecs -cover
 ```
 

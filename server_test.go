@@ -13,25 +13,39 @@ import (
 )
 
 var _ = Describe("Server", func() {
+	const port = 5555
+
 	AfterEach(func() {
 		gexec.KillAndWait()
 	})
 
 	It("listens on port 5555 by default", func() {
-		session := startServer(5555)
-		Expect(session.Out).To(gbytes.Say("Starting server on port 5555..."))
+		session := startServer(port)
+
+		Expect(session.Out).To(gbytes.Say("Listening on port 5555..."))
 		Consistently(session).ShouldNot(gexec.Exit())
 	})
 
 	It("listens on a custom port", func() {
 		cmd := exec.Command(serverBinaryPath, "-port", "1234")
+
 		session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+
+		Expect(err).NotTo(HaveOccurred())
+		Eventually(listeningOn(1234)).Should(BeTrue())
+		Expect(session.Out).To(gbytes.Say("Listening on port 1234..."))
+	})
+
+	It("accepts arbitrary natural language", func() {
+		session := startServer(port)
+		conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))
 		Expect(err).NotTo(HaveOccurred())
 
-		Eventually(listeningOn(1234)).Should(BeTrue())
+		_, err = conn.Write([]byte("here are some words"))
+		conn.Close()
 
-		Expect(session.Out).To(gbytes.Say("Starting server on port 1234..."))
-		Consistently(session).ShouldNot(gexec.Exit())
+		Expect(err).NotTo(HaveOccurred())
+		Eventually(session.Out).Should(gbytes.Say("received 'here are some words'"))
 	})
 })
 

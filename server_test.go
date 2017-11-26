@@ -1,12 +1,14 @@
 package main_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"os/exec"
 
+	"github.com/jamesjoshuahill/language/stats"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -34,13 +36,9 @@ var _ = Describe("Server", func() {
 
 	It("listens for natural language", func() {
 		session := startServer(listenerPort)
-		conn, err := net.Dial("tcp", fmt.Sprintf(":%d", listenerPort))
-		Expect(err).NotTo(HaveOccurred())
 
-		_, err = conn.Write([]byte("here are some more words"))
+		sendLanguage("here are some more words", listenerPort)
 
-		Expect(err).NotTo(HaveOccurred())
-		conn.Close()
 		Eventually(session.Out).Should(gbytes.Say("received 'here are some more words'"))
 	})
 
@@ -57,16 +55,16 @@ var _ = Describe("Server", func() {
 	It("responds to GET /stats", func() {
 		startServer(webPort)
 
-		response, err := http.DefaultClient.Get("http://localhost:8080/stats")
+		response, err := http.DefaultClient.Get(fmt.Sprintf("http://localhost:%d/stats", webPort))
 
 		Expect(err).NotTo(HaveOccurred())
 		defer response.Body.Close()
 		stats, err := ioutil.ReadAll(response.Body)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(stats).To(MatchJSON(`{
-			"count": 5,
-			"top5words": ["here", "are", "some", "more", "words"],
-			"top5letters": ["e", "r", "o", "s", "h"]
+			"count": 0,
+			"top5words": [],
+			"top5letters": []
 		}`))
 	})
 
@@ -80,6 +78,21 @@ var _ = Describe("Server", func() {
 		Expect(session.Out).To(gbytes.Say("Serving HTTP on port 1234..."))
 		_, err = http.DefaultClient.Get("http://localhost:1234/stats")
 		Expect(err).NotTo(HaveOccurred())
+	})
+
+	It("responds to GET /stats with language stats", func() {
+		startServer(listenerPort, webPort)
+		sendLanguage("a a at at hat hat chat chat match match", listenerPort)
+
+		response, err := http.DefaultClient.Get("http://localhost:8080/stats")
+
+		Expect(err).NotTo(HaveOccurred())
+		defer response.Body.Close()
+		var actual stats.Summary
+		Expect(json.NewDecoder(response.Body).Decode(&actual)).To(Succeed())
+		Expect(actual.Count).To(Equal(5))
+		Expect(actual.Top5Words).To(ConsistOf("a", "at", "hat", "chat", "match"))
+		Expect(actual.Top5Letters).To(ConsistOf("a", "t", "h", "c", "m"))
 	})
 })
 
@@ -104,4 +117,14 @@ func listeningOn(port int) func() bool {
 		conn.Close()
 		return true
 	}
+}
+
+func sendLanguage(language string, port int) {
+	conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))
+	Expect(err).NotTo(HaveOccurred())
+
+	_, err = conn.Write([]byte(language))
+
+	Expect(err).NotTo(HaveOccurred())
+	conn.Close()
 }

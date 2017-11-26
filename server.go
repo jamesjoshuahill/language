@@ -13,25 +13,14 @@ import (
 	"github.com/jamesjoshuahill/language/stats"
 )
 
-func main() {
-	var port, webPort int
-	flag.IntVar(&port, "port", 5555, "port to listen for natural language")
-	flag.IntVar(&webPort, "webPort", 8080, "port to serve HTTP endpoints")
-	flag.Parse()
-
-	log.SetOutput(os.Stdout)
-
-	go languageListener(port)
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/stats", statsHandler)
-	log.Printf("Serving HTTP on port %d...", webPort)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", webPort), mux))
+type languageHandler struct {
+	port  int
+	stats Stats
 }
 
-func languageListener(port int) {
-	log.Printf("Listening on port %d...", port)
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+func (l languageHandler) Listen() {
+	log.Printf("Listening on port %d...", l.port)
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", l.port))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,24 +31,53 @@ func languageListener(port int) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		go connHandler(conn)
+		go l.connHandler(conn)
 	}
 }
 
-func connHandler(conn net.Conn) {
+func (l languageHandler) connHandler(conn net.Conn) {
 	defer conn.Close()
 	data, err := ioutil.ReadAll(conn)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Printf("received '%s'\n", string(data))
+	language := string(data)
+	log.Printf("received '%s'\n", language)
+	l.stats.Record(language)
 }
 
-func statsHandler(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(stats.Summary{
-		Count:       5,
-		Top5Words:   []string{"here", "are", "some", "more", "words"},
-		Top5Letters: []string{"e", "r", "o", "s", "h"},
-	})
+type Stats interface {
+	Record(string)
+	Summary() stats.Summary
+}
+
+type statsHandler struct {
+	stats Stats
+}
+
+func (h statsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(h.stats.Summary())
+}
+
+func main() {
+	var port, webPort int
+	flag.IntVar(&port, "port", 5555, "port to listen for natural language")
+	flag.IntVar(&webPort, "webPort", 8080, "port to serve HTTP endpoints")
+	flag.Parse()
+
+	log.SetOutput(os.Stdout)
+
+	languageStats := stats.NewStats()
+
+	listener := languageHandler{
+		stats: languageStats,
+		port:  port,
+	}
+	go listener.Listen()
+
+	mux := http.NewServeMux()
+	mux.Handle("/stats", statsHandler{languageStats})
+	log.Printf("Serving HTTP on port %d...", webPort)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", webPort), mux))
 }

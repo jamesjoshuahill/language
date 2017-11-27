@@ -9,9 +9,9 @@ import (
 )
 
 func main() {
-	var port, webPort int
+	var port, apiPort int
 	flag.IntVar(&port, "port", 5555, "port to listen for natural language")
-	flag.IntVar(&webPort, "webPort", 8080, "port to serve HTTP endpoints")
+	flag.IntVar(&apiPort, "apiPort", 8080, "port to serve HTTP API")
 	flag.Parse()
 
 	log.SetOutput(os.Stdout)
@@ -26,7 +26,7 @@ func main() {
 
 	api := apiHandler{
 		stats: languageStats,
-		port:  webPort,
+		port:  apiPort,
 	}
 	log.Fatal(api.Listen())
 }

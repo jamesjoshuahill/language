@@ -19,7 +19,7 @@ import (
 var _ = Describe("Server", func() {
 	const (
 		listenerPort = 5555
-		webPort      = 8080
+		apiPort      = 8080
 	)
 
 	AfterEach(func() {
@@ -27,7 +27,7 @@ var _ = Describe("Server", func() {
 	})
 
 	It("listens on ports 5555 and 8080 by default", func() {
-		session := startServer(listenerPort, webPort)
+		session := startServer(listenerPort, apiPort)
 
 		Expect(session.Out.Contents()).To(ContainSubstring("Listening on port 5555..."))
 		Expect(session.Out.Contents()).To(ContainSubstring("Serving HTTP on port 8080..."))
@@ -53,9 +53,9 @@ var _ = Describe("Server", func() {
 	})
 
 	It("responds to GET /stats", func() {
-		startServer(webPort)
+		startServer(apiPort)
 
-		response, err := http.DefaultClient.Get(fmt.Sprintf("http://localhost:%d/stats", webPort))
+		response, err := http.DefaultClient.Get(fmt.Sprintf("http://localhost:%d/stats", apiPort))
 
 		Expect(err).NotTo(HaveOccurred())
 		defer response.Body.Close()
@@ -69,7 +69,7 @@ var _ = Describe("Server", func() {
 	})
 
 	It("can serve HTTP requests on a custom port", func() {
-		cmd := exec.Command(serverBinaryPath, "-webPort", "1234")
+		cmd := exec.Command(serverBinaryPath, "-apiPort", "1234")
 
 		session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 
@@ -81,7 +81,7 @@ var _ = Describe("Server", func() {
 	})
 
 	It("responds to GET /stats with language stats", func() {
-		startServer(listenerPort, webPort)
+		startServer(listenerPort, apiPort)
 		sendLanguage("a a at at hat hat chat chat match match", listenerPort)
 
 		response, err := http.DefaultClient.Get("http://localhost:8080/stats")

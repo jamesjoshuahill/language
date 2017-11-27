@@ -13,7 +13,6 @@ type Summary struct {
 
 type stats struct {
 	mutex           *sync.RWMutex
-	wordsSeen       int
 	wordFrequency   map[string]int
 	letterFrequency map[rune]int
 	top5Words       *Top5
@@ -43,11 +42,10 @@ func (s *stats) Record(language string) {
 
 func (s *stats) Summary() Summary {
 	s.mutex.RLock()
-	count := s.wordsSeen
-	s.mutex.RUnlock()
+	defer s.mutex.RUnlock()
 
 	return Summary{
-		Count:       count,
+		Count:       len(s.wordFrequency),
 		Top5Words:   s.top5Words.List(),
 		Top5Letters: s.top5Letters.List(),
 	}
@@ -55,7 +53,6 @@ func (s *stats) Summary() Summary {
 
 func (s *stats) recordWord(word string) {
 	if _, exists := s.wordFrequency[word]; !exists {
-		s.wordsSeen++
 		s.wordFrequency[word] = 0
 	}
 	s.wordFrequency[word] += 1

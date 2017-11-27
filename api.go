@@ -5,14 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
-	"github.com/jamesjoshuahill/language/stats"
 )
-
-type Stats interface {
-	Record(string)
-	Summary() stats.Summary
-}
 
 type apiHandler struct {
 	port  int

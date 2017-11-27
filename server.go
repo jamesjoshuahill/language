@@ -8,6 +8,11 @@ import (
 	"github.com/jamesjoshuahill/language/stats"
 )
 
+type Stats interface {
+	Record(string)
+	Summary() stats.Summary
+}
+
 func main() {
 	var port, apiPort int
 	flag.IntVar(&port, "port", 5555, "port to listen for natural language")

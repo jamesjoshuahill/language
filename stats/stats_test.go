@@ -15,27 +15,33 @@ var _ = Describe("Stats", func() {
 		Expect(stats.Summary().Top5Letters).To(BeEmpty())
 	})
 
-	It("can count words", func() {
+	It("can record words", func() {
 		stats := stats.NewStats()
 
-		stats.Record("here are some more words")
+		stats.Record("hello")
+		stats.Record("world")
 
-		Expect(stats.Summary().Count).To(Equal(5))
+		Expect(stats.Summary().Count).To(Equal(2))
 	})
 
 	It("counts each word once", func() {
 		stats := stats.NewStats()
 
-		stats.Record("here are some more words")
-		stats.Record("and here are some other words")
+		stats.Record("hello")
+		stats.Record("hello")
+		stats.Record("world")
 
-		Expect(stats.Summary().Count).To(Equal(7))
+		Expect(stats.Summary().Count).To(Equal(2))
 	})
 
 	It("knows the top five words", func() {
 		stats := stats.NewStats()
 
-		stats.Record("here are some more words")
+		stats.Record("here")
+		stats.Record("are")
+		stats.Record("some")
+		stats.Record("more")
+		stats.Record("words")
 
 		Expect(stats.Summary().Top5Words).
 			To(ConsistOf("here", "are", "some", "more", "words"))
@@ -44,12 +50,26 @@ var _ = Describe("Stats", func() {
 	It("updates the list of top five words", func() {
 		stats := stats.NewStats()
 
-		stats.Record("here are some more words")
-		stats.Record("six six six six six six")
-		stats.Record("five five five five five")
-		stats.Record("four four four four")
-		stats.Record("three three three")
-		stats.Record("two two")
+		stats.Record("here")
+		stats.Record("are")
+		stats.Record("some")
+		stats.Record("more")
+		stats.Record("words")
+
+		stats.Record("two")
+		stats.Record("two")
+
+		stats.Record("three")
+		stats.Record("three")
+
+		stats.Record("four")
+		stats.Record("four")
+
+		stats.Record("five")
+		stats.Record("five")
+
+		stats.Record("six")
+		stats.Record("six")
 
 		Expect(stats.Summary().Top5Words).
 			To(ConsistOf("six", "five", "four", "three", "two"))
@@ -58,7 +78,12 @@ var _ = Describe("Stats", func() {
 	It("knows the top five letters", func() {
 		stats := stats.NewStats()
 
-		stats.Record("a bb ccc dddd eeeee ffffff")
+		stats.Record("a")
+		stats.Record("bb")
+		stats.Record("ccc")
+		stats.Record("dddd")
+		stats.Record("eeeee")
+		stats.Record("ffffff")
 
 		Expect(stats.Summary().Top5Letters).
 			To(ConsistOf("b", "c", "d", "e", "f"))

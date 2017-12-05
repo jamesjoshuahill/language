@@ -1,7 +1,6 @@
 package stats
 
 import (
-	"strings"
 	"sync"
 )
 
@@ -29,15 +28,12 @@ func NewStats() *stats {
 	}
 }
 
-func (s *stats) Record(language string) {
+func (s *stats) Record(word string) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	words := strings.Fields(language)
-	for _, word := range words {
-		s.recordWord(word)
-		s.recordLetters(word)
-	}
+	s.recordWord(word)
+	s.recordLetters(word)
 }
 
 func (s *stats) Summary() Summary {

@@ -1,9 +1,9 @@
 package handler
 
 import (
+	"bufio"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 )
@@ -46,12 +46,16 @@ func (l languageHandler) Listen(port int) {
 
 func (l languageHandler) Handle(conn Conn) {
 	defer conn.Close()
-	data, err := ioutil.ReadAll(conn)
-	if err != nil {
+
+	scanner := bufio.NewScanner(conn)
+	scanner.Split(bufio.ScanWords)
+
+	for scanner.Scan() {
+		word := scanner.Text()
+		log.Printf("received '%s'\n", word)
+		l.stats.Record(word)
+	}
+	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
-
-	language := string(data)
-	log.Printf("received '%s'\n", language)
-	l.stats.Record(language)
 }

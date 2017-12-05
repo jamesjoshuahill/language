@@ -39,7 +39,7 @@ var _ = Describe("Server", func() {
 
 		sendLanguage("here are some more words", listenerPort)
 
-		Eventually(session.Out).Should(gbytes.Say("received 'here are some more words'"))
+		Eventually(session.Out).Should(gbytes.Say("received 'here'"))
 	})
 
 	It("can listen for natural language on a custom port", func() {

@@ -8,13 +8,12 @@ import (
 )
 
 type languageHandler struct {
-	port  int
 	stats Stats
 }
 
-func (l languageHandler) Listen() {
-	log.Printf("Listening on port %d...", l.port)
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", l.port))
+func (l languageHandler) Listen(port int) {
+	log.Printf("Listening on port %d...", port)
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Fatal(err)
 	}

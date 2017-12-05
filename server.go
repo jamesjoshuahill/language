@@ -23,15 +23,9 @@ func main() {
 
 	languageStats := stats.NewStats()
 
-	listener := languageHandler{
-		stats: languageStats,
-		port:  port,
-	}
-	go listener.Listen()
+	listener := languageHandler{stats: languageStats}
+	go listener.Listen(port)
 
-	api := apiHandler{
-		stats: languageStats,
-		port:  apiPort,
-	}
-	log.Fatal(api.Listen())
+	api := apiHandler{stats: languageStats}
+	log.Fatal(api.ListenAndServe(apiPort))
 }

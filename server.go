@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/jamesjoshuahill/language/handler"
 	"github.com/jamesjoshuahill/language/stats"
 )
 
@@ -23,7 +24,7 @@ func main() {
 
 	languageStats := stats.NewStats()
 
-	listener := languageHandler{stats: languageStats}
+	listener := handler.New(languageStats)
 	go listener.Listen(port)
 
 	api := apiHandler{stats: languageStats}

@@ -1,14 +1,30 @@
-package main
+package handler
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
 )
 
+//go:generate counterfeiter -o fakes/recorder.go . Recorder
+type Recorder interface {
+	Record(string)
+}
+
+//go:generate counterfeiter -o fakes/conn.go . Conn
+type Conn interface {
+	io.Reader
+	io.Closer
+}
+
 type languageHandler struct {
-	stats Stats
+	stats Recorder
+}
+
+func New(stats Recorder) *languageHandler {
+	return &languageHandler{stats: stats}
 }
 
 func (l languageHandler) Listen(port int) {
@@ -24,11 +40,11 @@ func (l languageHandler) Listen(port int) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		go l.connHandler(conn)
+		go l.Handle(conn)
 	}
 }
 
-func (l languageHandler) connHandler(conn net.Conn) {
+func (l languageHandler) Handle(conn Conn) {
 	defer conn.Close()
 	data, err := ioutil.ReadAll(conn)
 	if err != nil {

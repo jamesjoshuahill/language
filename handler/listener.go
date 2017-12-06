@@ -13,12 +13,6 @@ type Recorder interface {
 	Record(string)
 }
 
-//go:generate counterfeiter -o fakes/conn.go . Conn
-type Conn interface {
-	io.Reader
-	io.Closer
-}
-
 type languageHandler struct {
 	stats Recorder
 }
@@ -44,7 +38,7 @@ func (l languageHandler) Listen(port int) {
 	}
 }
 
-func (l languageHandler) Handle(conn Conn) {
+func (l languageHandler) Handle(conn io.ReadCloser) {
 	defer conn.Close()
 
 	scanner := bufio.NewScanner(conn)

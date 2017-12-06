@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"bytes"
+	"io/ioutil"
 
 	"github.com/jamesjoshuahill/language/handler"
 	"github.com/jamesjoshuahill/language/handler/fakes"
@@ -14,13 +15,10 @@ var _ = Describe("Handler", func() {
 	It("calls the recorder with the word received", func() {
 		recorder := new(fakes.FakeRecorder)
 		listener := handler.New(recorder)
-		reader := bytes.NewReader([]byte("hello"))
-		conn := new(fakes.FakeConn)
-		conn.ReadStub = reader.Read
+		conn := ioutil.NopCloser(bytes.NewReader([]byte("hello")))
 
 		listener.Handle(conn)
 
-		Expect(conn.ReadCallCount()).To(Equal(2))
 		Expect(recorder.RecordCallCount()).To(Equal(1))
 		Expect(recorder.RecordArgsForCall(0)).To(Equal("hello"))
 	})
@@ -28,13 +26,10 @@ var _ = Describe("Handler", func() {
 	It("calls the recorder with each word received", func() {
 		recorder := new(fakes.FakeRecorder)
 		listener := handler.New(recorder)
-		reader := bytes.NewReader([]byte("hello world"))
-		conn := new(fakes.FakeConn)
-		conn.ReadStub = reader.Read
+		conn := ioutil.NopCloser(bytes.NewReader([]byte("hello world")))
 
 		listener.Handle(conn)
 
-		Expect(conn.ReadCallCount()).To(Equal(2))
 		Expect(recorder.RecordCallCount()).To(Equal(2))
 		Expect(recorder.RecordArgsForCall(0)).To(Equal("hello"))
 		Expect(recorder.RecordArgsForCall(1)).To(Equal("world"))
